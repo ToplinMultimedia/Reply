@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tolu Reply v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg2: #111;
+      --bg3: #141414;
+      --border: #1e1e1e;
+      --border2: #252525;
+      --accent: #f0eb9e;
+      --text: #e8e4dc;
+      --muted: #555;
+      --dimmed: #3a3a3a;
+      --success: #4caf50;
+      --error: #ff6b6b;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .app {
+      display: grid;
+      grid-template-columns: 260px 1fr 340px;
+      grid-template-rows: 100vh;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Left Panel (Config) ──────────────────────────────────────── */
+    .panel-left {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 20px;
+      overflow-y: auto;
+      background: #080808;
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 2px;
+      letter-spacing: -0.02em;
+    }
+    .version {
+      font-size: 9px;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 28px;
+    }
+
+    .section-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--dimmed);
+      margin-bottom: 8px;
+    }
+
+    .field { margin-bottom: 16px; }
+
+    input[type="password"], input[type="text"] {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      padding: 9px 11px;
+      border-radius: 7px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: #333; }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--accent);
+      color: #0a0a0a;
+      border: none;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      padding: 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      padding: 9px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-secondary:hover { border-color: #333; color: #aaa; }
+
+    .status-msg {
+      font-size: 10px;
+      text-align: center;
+      min-height: 14px;
+      margin-top: 7px;
+      transition: color 0.2s;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: #3a3a3a; }
+    .stat-val { font-size: 14px; color: var(--accent); font-weight: 500; }
+
+    .spacer { flex: 1; }
+
+    .key-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      color: #333;
+      margin-bottom: 14px;
+    }
+    .key-indicator.has-key { border-color: #1a2a1a; color: #3a6a3a; background: rgba(76,175,80,0.04); }
+    .key-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #2a2a2a; flex-shrink: 0;
+    }
+    .key-indicator.has-key .key-dot { background: var(--success); }
+
+    /* ── Center Panel (Main) ──────────────────────────────────────── */
+    .panel-center {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .center-top {
+      padding: 24px 28px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .center-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    textarea.tweet-input {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      padding: 14px 16px;
+      resize: none;
+      outline: none;
+      line-height: 1.6;
+      height: 110px;
+      transition: border-color 0.2s;
+    }
+    textarea.tweet-input:focus { border-color: var(--border2); }
+    textarea.tweet-input::placeholder { color: #2a2a2a; }
+
+    .tweet-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .tweet-actions .btn-primary { flex: 1; }
+
+    .niche-detected {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid currentColor;
+      opacity: 0.7;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Variants Area ───────────────────────────────────────────── */
+    .center-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 28px;
+    }
+    .center-body::-webkit-scrollbar { width: 4px; }
+    .center-body::-webkit-scrollbar-track { background: transparent; }
+    .center-body::-webkit-scrollbar-thumb { background: #1e1e1e; border-radius: 2px; }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #1e1e1e;
+      text-align: center;
+      gap: 10px;
+    }
+    .empty-icon { font-size: 32px; opacity: 0.4; }
+    .empty-text { font-size: 11px; line-height: 1.7; }
+
+    .variants-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dimmed);
+      margin-bottom: 12px;
+    }
+
+    .variants-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .variant-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      animation: fadeUp 0.25s ease both;
+    }
+    .variant-card:nth-child(2) { animation-delay: 0.06s; }
+    .variant-card:nth-child(3) { animation-delay: 0.12s; }
+    .variant-card:nth-child(4) { animation-delay: 0.18s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .variant-card:hover { border-color: var(--border2); background: #161616; }
+    .variant-card.selected { border-color: var(--accent); background: rgba(240,235,158,0.03); }
+
+    .variant-text {
+      font-size: 13px;
+      color: #d0ccbf;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    .variant-meta { display: flex; align-items: center; gap: 8px; }
+    .variant-angle {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      opacity: 0.5;
+    }
+
+    /* ── Edit & Send ─────────────────────────────────────────────── */
+    .edit-section {
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+
+    textarea.edit-area {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      padding: 12px 14px;
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+      line-height: 1.6;
+      transition: border-color 0.15s;
+      margin-bottom: 8px;
+    }
+    textarea.edit-area:focus { border-color: var(--border2); }
+
+    .edit-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .char-count { font-size: 10px; color: #333; }
+    .char-count.over { color: var(--error); }
+
+    .send-row { display: flex; gap: 8px; }
+    .regen-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .regen-btn:hover { border-color: #333; color: #aaa; }
+
+    .copy-btn {
+      flex: 1;
+      background: var(--accent);
+      color: #0a0a0a;
+      border: none;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .copy-btn:hover { opacity: 0.88; }
+    .copy-btn:active { transform: scale(0.98); }
+
+    /* ── Right Panel (Sidebar / Search) ──────────────────────────── */
+    .panel-right {
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      background: #080808;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 20px 18px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .sidebar-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .search-input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      padding: 9px 11px;
+      border-radius: 7px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: #2a2a2a; }
+
+    .search-btn {
+      background: var(--accent);
+      color: #0a0a0a;
+      border: none;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 9px 13px;
+      border-radius: 7px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .search-btn:hover { opacity: 0.85; }
+
+    .niche-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .chip {
+      font-size: 9px;
+      padding: 4px 9px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.04em;
+      background: transparent;
+      font-family: 'DM Mono', monospace;
+    }
+    .chip:hover { border-color: #333; color: #aaa; }
+    .chip.active { border-color: var(--accent); color: var(--accent); background: rgba(240,235,158,0.06); }
+
+    .sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+    }
+    .sidebar-body::-webkit-scrollbar { width: 4px; }
+    .sidebar-body::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-body::-webkit-scrollbar-thumb { background: #1e1e1e; border-radius: 2px; }
+
+    .sidebar-empty {
+      text-align: center;
+      color: #222;
+      font-size: 11px;
+      padding: 40px 16px;
+      line-height: 1.8;
+    }
+    .sidebar-empty-icon { font-size: 26px; margin-bottom: 10px; }
+
+    .search-result-card {
+      background: #0e0e0e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      animation: fadeUp 0.2s ease both;
+    }
+    .search-result-card:nth-child(2) { animation-delay: 0.05s; }
+    .search-result-card:nth-child(3) { animation-delay: 0.10s; }
+    .search-result-card:nth-child(4) { animation-delay: 0.15s; }
+    .search-result-card:hover { border-color: var(--border2); }
+
+    .result-meta { font-size: 10px; color: #3a3a3a; margin-bottom: 6px; }
+    .result-niche { color: var(--accent); opacity: 0.5; }
+
+    .result-query {
+      font-size: 11px;
+      color: #999;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .result-open-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: #666;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .result-open-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(240,235,158,0.04);
+    }
+
+    /* ── Loading spinner ─────────────────────────────────────────── */
+    .spin {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 1.5px solid #333;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ───────────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--bg2);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      font-size: 11px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      opacity: 0;
+      transition: all 0.25s;
+      pointer-events: none;
+      z-index: 9999;
+      white-space: nowrap;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Responsive: collapse to two-panel on narrow ─────────────── */
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 220px 1fr; }
+      .panel-right { display: none; }
+    }
+    @media (max-width: 640px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .panel-left { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ══ LEFT: Config ══ -->
+  <aside class="panel-left">
+    <div class="logo">Tolu Reply</div>
+    <div class="version">v2.0 — Multi-niche edition</div>
+
+    <div class="key-indicator" id="keyIndicator">
+      <span class="key-dot"></span>
+      <span id="keyLabel">No API key saved</span>
+    </div>
+
+    <div class="field">
+      <div class="section-label">Groq API Key</div>
+      <input type="password" id="apiKeyInput" placeholder="gsk_..." />
+    </div>
+    <button class="btn-primary" id="saveKeyBtn">Save Key</button>
+    <div class="status-msg" id="keyStatus"></div>
+
+    <hr />
+
+    <div class="stat-row">
+      <span class="stat-label">Replies today</span>
+      <span class="stat-val" id="todayCount">0</span>
+    </div>
+    <div class="stat-row">
+      <span class="stat-label">Total replies</span>
+      <span class="stat-val" id="totalCount">0</span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <button class="btn-secondary" id="resetStatsBtn" style="margin-top:12px;">Reset Stats</button>
+  </aside>
+
+  <!-- ══ CENTER: Main ══ -->
+  <main class="panel-center">
+    <div class="center-top">
+      <div class="center-title">Paste a tweet, get 4 reply variants</div>
+
+      <textarea
+        class="tweet-input"
+        id="tweetInput"
+        placeholder="Paste the tweet text here..."
+        maxlength="560"
+      ></textarea>
+
+      <div class="tweet-actions">
+        <button class="btn-primary" id="generateBtn">
+          Generate Replies →
+        </button>
+        <span class="niche-detected" id="nicheTag" style="display:none;"></span>
+      </div>
+    </div>
+
+    <div class="center-body" id="centerBody">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">💬</div>
+        <div class="empty-text">
+          Paste a tweet above and hit Generate<br/>
+          to get 4 tailored reply variants.
+        </div>
+      </div>
+
+      <!-- Variants appear here -->
+      <div id="variantsSection" style="display:none;">
+        <div class="variants-label">4 variants — select one or edit below</div>
+        <div class="variants-grid" id="variantsGrid"></div>
+
+        <div class="edit-section">
+          <textarea class="edit-area" id="editArea" maxlength="280" rows="3"></textarea>
+          <div class="edit-footer">
+            <span class="char-count" id="charCount">0 / 280</span>
+          </div>
+          <div class="send-row">
+            <button class="regen-btn" id="regenBtn">↺ New variants</button>
+            <button class="copy-btn" id="copyBtn">Copy Reply ✓</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ══ RIGHT: Search Sidebar ══ -->
+  <aside class="panel-right">
+    <div class="sidebar-header">
+      <div class="sidebar-title">⚡ Search High-Impression Tweets</div>
+
+      <div class="search-row">
+        <input
+          class="search-input"
+          id="searchInput"
+          placeholder="keyword, e.g. crypto, AI..."
+        />
+        <button class="search-btn" id="searchBtn">Search</button>
+      </div>
+
+      <div class="niche-chips" id="nicheChips"></div>
+    </div>
+
+    <div class="sidebar-body" id="sidebarBody">
+      <div class="sidebar-empty">
+        <div class="sidebar-empty-icon">🔍</div>
+        Search a keyword or pick a niche<br/>to find high-impression tweets on X
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  Tolu Reply v2 — Web App
+// ═══════════════════════════════════════════════════
+
+// ── Storage (localStorage replaces chrome.storage) ──────────────
+const store = {
+  get: (key) => {
+    try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+  },
+  set: (key, val) => {
+    localStorage.setItem(key, JSON.stringify(val));
+  }
+};
+
+// ── Niches ───────────────────────────────────────────────────────
+const NICHES = {
+  tech:       { label: 'Tech',        color: '#7dd3fc', keywords: ['code','dev','engineer','software','AI','LLM','startup','SaaS','app','javascript','python','react','design','UI','UX','product'] },
+  finance:    { label: 'Finance',     color: '#86efac', keywords: ['money','invest','stock','crypto','bitcoin','ETH','market','trading','portfolio','dividend','income','wealth','dollar','naira'] },
+  marketing:  { label: 'Marketing',   color: '#f9a8d4', keywords: ['brand','content','SEO','growth','funnel','conversion','audience','social media','copywriting','newsletter','leads','viral'] },
+  business:   { label: 'Business',    color: '#fcd34d', keywords: ['entrepreneur','business','client','revenue','profit','sales','agency','freelance','hustle','founder','CEO','B2B'] },
+  motivation: { label: 'Motivation',  color: '#c4b5fd', keywords: ['success','mindset','grind','discipline','consistency','goal','dream','potential','failure','win','grow','hard work'] },
+  politics:   { label: 'Politics',    color: '#fca5a5', keywords: ['government','election','vote','president','policy','party','democracy','Nigeria','Naira','Tinubu','GDP','inflation'] },
+  creator:    { label: 'Creator',     color: '#fdba74', keywords: ['youtube','twitter','X','impressions','followers','engagement','creator','post','viral','niche','content creator'] },
+  life:       { label: 'Life',        color: '#a3e635', keywords: ['relationship','love','family','health','mental','therapy','anxiety','happiness','friend','marriage','dating'] },
+};
+
+const NICHE_SEARCH_QUERIES = {
+  tech:       'tech OR developer OR AI OR SaaS min_faves:500',
+  finance:    'investing OR crypto OR money OR stocks min_faves:500',
+  marketing:  'marketing OR growth OR content OR copywriting min_faves:500',
+  business:   'entrepreneur OR business OR startup OR revenue min_faves:500',
+  motivation: 'mindset OR discipline OR success OR consistency min_faves:500',
+  politics:   'Nigeria OR government OR economy OR election min_faves:500',
+  creator:    'content creator OR impressions OR followers OR viral min_faves:500',
+  life:       'relationship OR mental health OR happiness min_faves:500',
+  general:    'min_faves:1000 -filter:links',
+};
+
+// ── Niche detection ───────────────────────────────────────────────
+function detectNiche(text) {
+  const lower = text.toLowerCase();
+  let best = { niche: 'general', score: 0 };
+  for (const [key, data] of Object.entries(NICHES)) {
+    const score = data.keywords.filter(k => lower.includes(k)).length;
+    if (score > best.score) best = { niche: key, score };
+  }
+  return best.niche;
+}
+
+// ── System prompt ─────────────────────────────────────────────────
+function buildSystemPrompt(niche) {
+  const nicheGuidance = {
+    tech:       'The tweet is tech/dev/design related. Use precise technical language where relevant. Can be slightly more nerdy or specific.',
+    finance:    'The tweet is finance/crypto/money related. Be sharp, numbers-aware, no hype. Call out BS if needed.',
+    marketing:  'The tweet is marketing/growth related. Think like a practitioner, not a guru. Specific > vague.',
+    business:   'The tweet is business/entrepreneurship related. Real-talk, practical, no inspirational fluff.',
+    motivation: "The tweet is motivational. Don't just agree — add a layer, challenge it slightly, or make it more specific.",
+    politics:   'The tweet is political/current affairs. Be measured, sharp, don\'t take obvious sides but have a real perspective.',
+    creator:    'The tweet is about content creation/social media. Speak from experience, understand the game.',
+    life:       'The tweet is about life/relationships/personal stuff. Be human, warm but not cheesy.',
+    general:    'General topic. Use best judgement.',
+  };
+
+  return `You are ghostwriting replies for a specific person on X (Twitter).
+
+About them:
+- Frontend developer and graphic designer — technical AND creative
+- Nigerian — understands both global and local African context
+- Sharp, direct, real opinions. Not a people-pleaser.
+
+Reply style rules:
+- 1-2 lines MAX. Occasionally 3 if there's real substance to add
+- Adds genuine value, insight, or a punchy angle — never empty agreement  
+- Casual but not sloppy. Goes sharp/corporate when the topic demands
+- Occasionally asks a question back to spark conversation
+- BANNED words/phrases: "Great point", "Absolutely", "Indeed", "Fascinating", "I couldn't agree more", "Well said", "Spot on"
+- NEVER start with a compliment or affirmation
+- No hashtags in replies
+- Max 1 emoji and only if it fits naturally
+- Sometimes contrarian if the tweet is overhyped or shallow
+- Drop the "I" sometimes for punchier openers: "Noticed this...", "Been seeing this..."
+- Sounds 100% human — not an AI assistant
+
+Niche context: ${nicheGuidance[niche] || nicheGuidance.general}
+
+Return EXACTLY 4 reply variants as JSON:
+- Variant 1: Value/Insight angle
+- Variant 2: Punchy/Direct or Contrarian angle  
+- Variant 3: Question back / conversation-sparking angle
+- Variant 4: Nigerian voice — natural mix of Nigerian Twitter slang AND Pidgin English based on tweet vibe. Should sound like a sharp Nigerian on the TL, not forced. Examples of tone: "e be like say...", "This one na facts", "No be lie", "Omo this hits", "Guy honestly...", "Na so e be"
+
+Each variant has:
+- "text": the reply
+- "angle": short label
+- "naija": true/false (true only for variant 4)
+
+Return ONLY valid JSON, no markdown:
+{"variants":[{"text":"...","angle":"...","naija":false},{"text":"...","angle":"...","naija":false},{"text":"...","angle":"...","naija":false},{"text":"...","angle":"...","naija":true}]}`;
+}
+
+// ── Groq API call ─────────────────────────────────────────────────
+async function generateReplies(tweetText, niche, apiKey) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.93,
+      max_tokens: 500,
+      messages: [
+        { role: 'system', content: buildSystemPrompt(niche) },
+        { role: 'user', content: `Tweet to reply to:\n"${tweetText}"\n\nWrite 4 variants as JSON.` }
+      ]
+    })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `Groq API error: ${res.status}`);
+  }
+  const data = await res.json();
+  const raw = data.choices[0].message.content.trim().replace(/```json|```/g, '').trim();
+  return JSON.parse(raw).variants;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function showToast(msg, duration = 2000) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+// ── Stats ─────────────────────────────────────────────────────────
+function loadStats() {
+  const today = new Date().toDateString();
+  const lastDate = store.get('lastReplyDate');
+  const repliesToday = lastDate === today ? (store.get('repliesToday') || 0) : 0;
+  document.getElementById('todayCount').textContent = repliesToday;
+  document.getElementById('totalCount').textContent = store.get('repliesTotal') || 0;
+}
+
+function incrementStats() {
+  const today = new Date().toDateString();
+  const lastDate = store.get('lastReplyDate');
+  const todayN = lastDate === today ? (store.get('repliesToday') || 0) : 0;
+  store.set('repliesToday', todayN + 1);
+  store.set('repliesTotal', (store.get('repliesTotal') || 0) + 1);
+  store.set('lastReplyDate', today);
+  loadStats();
+}
+
+// ── Init UI ───────────────────────────────────────────────────────
+function initKeyUI() {
+  const key = store.get('groqApiKey');
+  const indicator = document.getElementById('keyIndicator');
+  const label = document.getElementById('keyLabel');
+  if (key) {
+    indicator.classList.add('has-key');
+    label.textContent = 'API key saved ✓';
+    document.getElementById('apiKeyInput').value = key;
+  } else {
+    indicator.classList.remove('has-key');
+    label.textContent = 'No API key saved';
+  }
+}
+
+// ── Save Key ──────────────────────────────────────────────────────
+document.getElementById('saveKeyBtn').addEventListener('click', () => {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  const statusEl = document.getElementById('keyStatus');
+  if (!key || !key.startsWith('gsk_')) {
+    statusEl.style.color = 'var(--error)';
+    statusEl.textContent = 'Invalid key — must start with gsk_';
+    return;
+  }
+  store.set('groqApiKey', key);
+  statusEl.style.color = 'var(--success)';
+  statusEl.textContent = 'Saved ✓';
+  initKeyUI();
+  setTimeout(() => statusEl.textContent = '', 2500);
+});
+
+// ── Reset Stats ───────────────────────────────────────────────────
+document.getElementById('resetStatsBtn').addEventListener('click', () => {
+  store.set('repliesTotal', 0);
+  store.set('repliesToday', 0);
+  loadStats();
+  showToast('Stats reset');
+});
+
+// ── Niche tag live update ─────────────────────────────────────────
+const tweetInput = document.getElementById('tweetInput');
+const nicheTag = document.getElementById('nicheTag');
+
+tweetInput.addEventListener('input', () => {
+  const text = tweetInput.value.trim();
+  if (text.length > 20) {
+    const niche = detectNiche(text);
+    const data = NICHES[niche];
+    if (data) {
+      nicheTag.textContent = data.label;
+      nicheTag.style.color = data.color;
+      nicheTag.style.borderColor = data.color;
+      nicheTag.style.display = 'inline-flex';
+    } else {
+      nicheTag.style.display = 'none';
+    }
+  } else {
+    nicheTag.style.display = 'none';
+  }
+});
+
+// ── Generate ──────────────────────────────────────────────────────
+let currentVariants = [];
+let selectedIndex = 0;
+
+async function generate() {
+  const tweetText = tweetInput.value.trim();
+  if (!tweetText) { showToast('Paste a tweet first'); return; }
+
+  const apiKey = store.get('groqApiKey');
+  if (!apiKey) { showToast('Save your Groq API key first'); return; }
+
+  const niche = detectNiche(tweetText);
+  const btn = document.getElementById('generateBtn');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>thinking...';
+
+  try {
+    const variants = await generateReplies(tweetText, niche, apiKey);
+    currentVariants = variants;
+    selectedIndex = 0;
+    renderVariants(variants, niche);
+  } catch (err) {
+    showToast(`Error: ${err.message}`, 4000);
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Generate Replies →';
+  }
+}
+
+document.getElementById('generateBtn').addEventListener('click', generate);
+document.getElementById('regenBtn').addEventListener('click', generate);
+
+// ── Render variants ───────────────────────────────────────────────
+function renderVariants(variants, niche) {
+  document.getElementById('emptyState').style.display = 'none';
+  const section = document.getElementById('variantsSection');
+  section.style.display = 'block';
+
+  const grid = document.getElementById('variantsGrid');
+  grid.innerHTML = variants.map((v, i) => `
+    <div class="variant-card ${i === 0 ? 'selected' : ''}" data-index="${i}">
+      <div class="variant-text">${escHtml(v.text)}</div>
+      <div class="variant-meta">
+        <span class="variant-angle">${escHtml(v.angle)}</span>
+        ${v.naija ? '<span title="Nigerian voice">🇳🇬</span>' : ''}
+      </div>
+    </div>
+  `).join('');
+
+  const editArea = document.getElementById('editArea');
+  editArea.value = variants[0].text;
+  updateCharCount();
+
+  grid.querySelectorAll('.variant-card').forEach(card => {
+    card.addEventListener('click', () => {
+      grid.querySelectorAll('.variant-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedIndex = parseInt(card.dataset.index);
+      editArea.value = variants[selectedIndex].text;
+      updateCharCount();
+    });
+  });
+}
+
+// ── Edit area ─────────────────────────────────────────────────────
+document.getElementById('editArea').addEventListener('input', updateCharCount);
+function updateCharCount() {
+  const len = document.getElementById('editArea').value.length;
+  const el = document.getElementById('charCount');
+  el.textContent = `${len} / 280`;
+  el.classList.toggle('over', len > 260);
+}
+
+// ── Copy ──────────────────────────────────────────────────────────
+document.getElementById('copyBtn').addEventListener('click', async () => {
+  const text = document.getElementById('editArea').value.trim();
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Copied to clipboard ✓');
+    incrementStats();
+  } catch {
+    showToast('Could not copy — select and copy manually');
+  }
+});
+
+// ── Niche chips (sidebar) ─────────────────────────────────────────
+const nicheChips = document.getElementById('nicheChips');
+Object.entries(NICHES).forEach(([key, n]) => {
+  const btn = document.createElement('button');
+  btn.className = 'chip';
+  btn.dataset.niche = key;
+  btn.textContent = n.label;
+  btn.style.setProperty('--nc', n.color);
+  btn.addEventListener('click', () => {
+    nicheChips.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('searchInput').value = key;
+    doSearch(key);
+  });
+  nicheChips.appendChild(btn);
+});
+
+// ── Search ────────────────────────────────────────────────────────
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const q = document.getElementById('searchInput').value.trim();
+  if (q) doSearch(q);
+});
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const q = e.target.value.trim();
+    if (q) doSearch(q);
+  }
+});
+
+function doSearch(query) {
+  const nicheQuery = NICHE_SEARCH_QUERIES[query] || `${query} min_faves:500`;
+  const xUrl = `https://x.com/search?q=${encodeURIComponent(nicheQuery)}&f=live`;
+
+  const body = document.getElementById('sidebarBody');
+
+  // Build a descriptive card with tips
+  const nicheData = NICHES[query];
+  const color = nicheData?.color || '#f0eb9e';
+  const label = nicheData?.label || query;
+
+  body.innerHTML = `
+    <div class="search-result-card">
+      <div class="result-meta">
+        Niche: <span class="result-niche" style="color:${color}">${escHtml(label)}</span>
+      </div>
+      <div class="result-query">${escHtml(nicheQuery)}</div>
+      <a class="result-open-btn" href="${xUrl}" target="_blank" rel="noopener">
+        ↗ Open on X (Twitter)
+      </a>
+    </div>
+
+    <div class="search-result-card">
+      <div class="result-meta">Tip</div>
+      <div class="result-query" style="color:#555;">
+        Open the X search, find a high-impression tweet, paste it in the center panel and hit Generate to craft your reply.
+      </div>
+    </div>
+
+    ${Object.entries(NICHE_SEARCH_QUERIES)
+      .filter(([k]) => k !== query && k !== 'general')
+      .slice(0, 4)
+      .map(([k, q]) => {
+        const nd = NICHES[k];
+        const xLink = `https://x.com/search?q=${encodeURIComponent(q)}&f=live`;
+        return `
+          <div class="search-result-card">
+            <div class="result-meta">
+              Related: <span style="color:${nd.color};opacity:0.7;">${nd.label}</span>
+            </div>
+            <div class="result-query">${escHtml(q)}</div>
+            <a class="result-open-btn" href="${xLink}" target="_blank" rel="noopener">
+              ↗ Open on X
+            </a>
+          </div>
+        `;
+      }).join('')}
+  `;
+}
+
+// ── Boot ──────────────────────────────────────────────────────────
+initKeyUI();
+loadStats();
+</script>
+</body>
+</html>
